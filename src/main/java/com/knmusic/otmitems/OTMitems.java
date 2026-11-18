@@ -11,7 +11,10 @@ public final class OTMitems extends JavaPlugin {
 
     private PluginConfig pluginConfig;
     private WeaponData weaponData;
+    private IceBlocks iceBlocks;
     private FreezeManager freezeManager;
+    private IceFieldManager iceFieldManager;
+    private StealthManager stealthManager;
     private SkillService skillService;
     private CooldownBarTask cooldownBarTask;
     private BukkitTask cooldownBarHandle;
@@ -23,8 +26,12 @@ public final class OTMitems extends JavaPlugin {
         pluginConfig = new PluginConfig(this);
         pluginConfig.load();
         weaponData = new WeaponData(this);
-        freezeManager = new FreezeManager(this);
-        skillService = new SkillService(this, pluginConfig, weaponData, freezeManager);
+        iceBlocks = new IceBlocks(pluginConfig);
+        freezeManager = new FreezeManager(this, iceBlocks);
+        iceFieldManager = new IceFieldManager(this, iceBlocks);
+        stealthManager = new StealthManager(this, pluginConfig);
+        skillService = new SkillService(this, pluginConfig, weaponData,
+                freezeManager, iceFieldManager, stealthManager);
         cooldownBarTask = new CooldownBarTask(pluginConfig, weaponData);
         restartCooldownBar();
 
@@ -43,8 +50,14 @@ public final class OTMitems extends JavaPlugin {
     @Override
     public void onDisable() {
         stopCooldownBar();
+        if (stealthManager != null) {
+            stealthManager.clearAll();
+        }
         if (freezeManager != null) {
             freezeManager.thawAll();
+        }
+        if (iceBlocks != null) {
+            iceBlocks.restoreAll();
         }
     }
 
@@ -83,6 +96,10 @@ public final class OTMitems extends JavaPlugin {
 
     public FreezeManager getFreezeManager() {
         return freezeManager;
+    }
+
+    public StealthManager getStealthManager() {
+        return stealthManager;
     }
 
     public SkillService getSkillService() {

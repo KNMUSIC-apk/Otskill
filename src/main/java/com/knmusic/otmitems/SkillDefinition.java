@@ -4,24 +4,12 @@ import org.bukkit.Particle;
 
 /**
  * Định nghĩa một skill đọc từ config.yml.
- *
- * @param code               mã skill (chữ thường), ví dụ "hz63dse"
- * @param name               tên hiển thị (hỗ trợ mã màu)
- * @param range              tầm bắn tối đa (block)
- * @param freezeTicks        thời gian đóng băng (tick)
- * @param freezeRadius       bán kính đóng băng quanh điểm nổ (block)
- * @param damage             sát thương cộng thêm (0 = không gây sát thương)
- * @param slownessLevel      mức Slowness dùng để giữ chân
- * @param particle           hạt hiệu ứng đường đạn
- * @param cooldownMillis     thời gian hồi chiêu (ms)
- * @param customModelData    CustomModelData khi bật override (-1 = không đổi)
- * @param useMessage         thông báo khi kích hoạt
- * @param cooldownMessage    thông báo khi đang hồi chiêu
- * @param frozenMessage      thông báo gửi cho người bị đóng băng
+ * Trường {@code type} quyết định hành vi; {@code ice} chỉ dùng cho FROST_BOLT, {@code stealth} chỉ dùng cho STEALTH.
  */
 public record SkillDefinition(
         String code,
         String name,
+        SkillType type,
         double range,
         int freezeTicks,
         double freezeRadius,
@@ -32,6 +20,24 @@ public record SkillDefinition(
         int customModelData,
         String useMessage,
         String cooldownMessage,
-        String frozenMessage
+        String frozenMessage,
+        IceField ice,
+        Stealth stealth
 ) {
+
+    public enum SkillType {
+        /** Đạn băng + vùng băng quanh người dùng + đóng băng chân người chơi. */
+        FROST_BOLT,
+        /** Tàng hình, tăng tốc, cộng sát thương cho vũ khí. */
+        STEALTH
+    }
+
+    /** Vùng băng: bán kính, thời gian tồn tại (tick), tốc độ tan mỗi vòng (tick). */
+    public record IceField(int radius, int durationTicks, int meltRingTicks) {
+    }
+
+    /** Tàng hình: thời gian (tick), mức tăng tốc, sát thương cộng thêm, thông báo vào/ra. */
+    public record Stealth(int durationTicks, int speedLevel, double bonusDamage,
+                          String enterMessage, String exitMessage) {
+    }
 }

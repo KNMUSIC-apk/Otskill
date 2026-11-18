@@ -9,7 +9,7 @@ import java.util.UUID;
 
 /**
  * Xử lý khi người chơi kích hoạt skill bằng chuột phải: kiểm tra cooldown, đặt lại cooldown trong PDC
- * và phóng đạn băng.
+ * rồi chạy hành vi tương ứng với loại skill.
  */
 public final class SkillService {
 
@@ -22,15 +22,20 @@ public final class SkillService {
     private final PluginConfig config;
     private final WeaponData data;
     private final FreezeManager freezeManager;
+    private final IceFieldManager iceFieldManager;
+    private final StealthManager stealthManager;
 
     private final Map<UUID, Long> lastClick = new HashMap<>();
     private final Map<UUID, Long> lastCooldownNotice = new HashMap<>();
 
-    public SkillService(OTMitems plugin, PluginConfig config, WeaponData data, FreezeManager freezeManager) {
+    public SkillService(OTMitems plugin, PluginConfig config, WeaponData data, FreezeManager freezeManager,
+                        IceFieldManager iceFieldManager, StealthManager stealthManager) {
         this.plugin = plugin;
         this.config = config;
         this.data = data;
         this.freezeManager = freezeManager;
+        this.iceFieldManager = iceFieldManager;
+        this.stealthManager = stealthManager;
     }
 
     /**
@@ -73,9 +78,15 @@ public final class SkillService {
 
         data.setCooldownUntil(hand, now + skill.cooldownMillis());
         player.getInventory().setItemInMainHand(hand);
-
         player.sendMessage(config.color(skill.useMessage(), "skill", skill.name()));
-        new IceBoltTask(plugin, freezeManager, player, skill).runTaskTimer(plugin, 0L, 1L);
+
+        switch (skill.type()) {
+            case FROST_BOLT -> {
+                iceFieldManager.create(player, skill);
+                new IceBoltTask(plugin, freezeManager, player, skill).runTaskTimer(plugin, 0L, 1L);
+            }
+            case STEALTH -> stealthManager.activate(player, skill);
+        }
         return true;
     }
 

@@ -21,9 +21,11 @@ public final class PluginConfig {
     private final OTMitems plugin;
     private final Map<String, SkillDefinition> skills = new LinkedHashMap<>();
     private final Set<Material> extraWeapons = EnumSet.noneOf(Material.class);
+    private final Set<Material> protectedBlocks = EnumSet.noneOf(Material.class);
 
     private boolean overrideCustomModelData;
     private boolean allowAnyItem;
+    private Material iceMaterial = Material.PACKED_ICE;
     private boolean cooldownBarEnabled;
     private long cooldownBarUpdateTicks;
     private int cooldownBarLength;
@@ -46,11 +48,18 @@ public final class PluginConfig {
 
         extraWeapons.clear();
         for (String name : cfg.getStringList("settings.extra-weapon-materials")) {
-            Material material = Material.matchMaterial(name.trim().toUpperCase(Locale.ROOT));
-            if (material == null) {
-                plugin.getLogger().warning("Material không hợp lệ trong config: " + name);
-            } else {
+            Material material = parseMaterial(name, null);
+            if (material != null) {
                 extraWeapons.add(material);
+            }
+        }
+
+        iceMaterial = parseMaterial(cfg.getString("settings.ice.material", "PACKED_ICE"), Material.PACKED_ICE);
+        protectedBlocks.clear();
+        for (String name : cfg.getStringList("settings.ice.protected-blocks")) {
+            Material material = parseMaterial(name, null);
+            if (material != null) {
+                protectedBlocks.add(material);
             }
         }
 
@@ -72,15 +81,44 @@ public final class PluginConfig {
                     continue;
                 }
                 String code = key.toLowerCase(Locale.ROOT);
-                skills.put(code, parseSkill(code, s));
+                SkillDefinition skill = parseSkill(code, s);
+                if (skill != null) {
+                    skills.put(code, skill);
+                }
             }
         }
     }
 
     private SkillDefinition parseSkill(String code, ConfigurationSection s) {
+        String rawType = s.getString("type", "FROST_BOLT").trim().toUpperCase(Locale.ROOT);
+        SkillDefinition.SkillType type;
+        try {
+            type = SkillDefinition.SkillType.valueOf(rawType);
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("Skill " + code + ": type không hợp lệ (" + rawType + "), bỏ qua.");
+            return null;
+        }
+
+        SkillDefinition.IceField ice = type == SkillDefinition.SkillType.FROST_BOLT
+                ? new SkillDefinition.IceField(
+                        Math.max(1, s.getInt("ice-field.radius", 3)),
+                        secondsToTicks(s.getDouble("ice-field.duration-seconds", 10.0)),
+                        Math.max(1, s.getInt("ice-field.melt-ring-ticks", 5)))
+                : null;
+
+        SkillDefinition.Stealth stealth = type == SkillDefinition.SkillType.STEALTH
+                ? new SkillDefinition.Stealth(
+                        secondsToTicks(s.getDouble("stealth.duration-seconds", 15.0)),
+                        Math.max(0, s.getInt("stealth.speed-level", 1)),
+                        Math.max(0.0, s.getDouble("stealth.bonus-damage", 2.0)),
+                        s.getString("stealth.enter-message", "&bBạn đã vào chế độ &fTàng Hình&b!"),
+                        s.getString("stealth.exit-message", "&7Mất tàng hình: &e{reason}&7."))
+                : null;
+
         return new SkillDefinition(
                 code,
                 s.getString("name", code),
+                type,
                 Math.max(1.0, s.getDouble("range", 15.0)),
                 secondsToTicks(s.getDouble("freeze-seconds", 3.0)),
                 Math.max(0.5, s.getDouble("freeze-radius", 2.0)),
@@ -91,7 +129,9 @@ public final class PluginConfig {
                 s.getInt("custom-model-data", -1),
                 s.getString("use-message", "&bĐã kích hoạt &3{skill}&b!"),
                 s.getString("cooldown-message", "&c{skill} đang hồi chiêu, còn &e{time}s&c."),
-                s.getString("frozen-message", "&bBạn bị &3{skill}&b, đứng yên trong &f{time}s&b!")
+                s.getString("frozen-message", "&bBạn bị &3{skill}&b, đứng yên trong &f{time}s&b!"),
+                ice,
+                stealth
         );
     }
 
@@ -107,6 +147,17 @@ public final class PluginConfig {
             plugin.getLogger().warning("Particle không hợp lệ: " + raw + " (skill " + code + "), dùng SNOWFLAKE.");
             return Particle.SNOWFLAKE;
         }
+    }
+
+    private Material parseMaterial(String raw, Material fallback) {
+        Material material = raw == null ? null : Material.matchMaterial(raw.trim().toUpperCase(Locale.ROOT));
+        if (material == null) {
+            if (raw != null) {
+                plugin.getLogger().warning("Material không hợp lệ trong config: " + raw);
+            }
+            return fallback;
+        }
+        return material;
     }
 
     private static int secondsToTicks(double seconds) {
@@ -135,6 +186,14 @@ public final class PluginConfig {
         }
         String name = material.name();
         return name.endsWith("_SWORD") || name.endsWith("_AXE") || extraWeapons.contains(material);
+    }
+
+    public Material getIceMaterial() {
+        return iceMaterial;
+    }
+
+    public boolean isProtectedBlock(Material material) {
+        return protectedBlocks.contains(material);
     }
 
     /** Tin nhắn có tiền tố, lấy từ messages.<key>. */

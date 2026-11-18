@@ -1,17 +1,25 @@
 package com.knmusic.otmitems;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.UUID;
 
 /**
- * Bắt chuột phải không khí và chuột phải vào thực thể để kích hoạt skill.
+ * Bắt chuột phải để kích hoạt skill, khóa vị trí người bị đóng băng,
+ * và xử lý tàng hình khi tấn công hoặc bị đánh.
  */
 public final class WeaponListener implements Listener {
 
@@ -44,9 +52,38 @@ public final class WeaponListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent event) {
+        plugin.getFreezeManager().handleMove(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onDamageByEntity(EntityDamageByEntityEvent event) {
+        StealthManager stealth = plugin.getStealthManager();
+
+        if (event.getDamager() instanceof Player attacker && stealth.isStealthed(attacker.getUniqueId())) {
+            ItemStack hand = attacker.getInventory().getItemInMainHand();
+            if (plugin.getPluginConfig().isWeapon(hand.getType())) {
+                event.setDamage(event.getDamage() + stealth.bonusDamage(attacker.getUniqueId()));
+            }
+            stealth.finish(attacker.getUniqueId(), "đã tấn công");
+        }
+
+        if (event.getEntity() instanceof Player victim && stealth.isStealthed(victim.getUniqueId())) {
+            stealth.finish(victim.getUniqueId(), "bị tấn công");
+        }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        plugin.getStealthManager().forget(event.getEntity().getUniqueId());
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        plugin.getSkillService().forget(event.getPlayer().getUniqueId());
-        plugin.getCooldownBarTask().forget(event.getPlayer().getUniqueId());
+        UUID id = event.getPlayer().getUniqueId();
+        plugin.getSkillService().forget(id);
+        plugin.getCooldownBarTask().forget(id);
+        plugin.getStealthManager().forget(id);
     }
 }

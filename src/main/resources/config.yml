@@ -21,6 +21,20 @@ settings:
     - CROSSBOW
     - MACE
 
+  # Khối băng dùng cho skill FROST_BOLT
+  ice:
+    # PACKED_ICE không tự tan. ICE có thể tan thành nước dưới ánh sáng.
+    material: PACKED_ICE
+    # Các khối này không bao giờ bị đổi thành băng
+    protected-blocks:
+      - BEDROCK
+      - BARRIER
+      - END_PORTAL_FRAME
+      - END_PORTAL
+      - NETHER_PORTAL
+      - END_GATEWAY
+      - COMMAND_BLOCK
+
   # Thanh hồi chiêu hiển thị trên Action Bar khi đang cầm đúng vũ khí đó
   cooldown-bar:
     enabled: true
@@ -54,12 +68,18 @@ messages:
   reloaded: '&aĐã reload config.yml. Đã nạp &e{count} &askill.'
 
 skills:
-  # Mã skill (chữ thường). Dùng: /ot hz63dse
+  # ---------------------------------------------------------------
+  # hz63dse - Đóng Băng (type: FROST_BOLT)
+  # Khi dùng: băng tạo vùng quanh người dùng ngay lập tức, đồng thời
+  # đạn băng bay ra và đóng băng mục tiêu. Hết ice-field.duration-seconds
+  # băng tan dần từ ngoài vào tâm, khôi phục khối gốc.
+  # ---------------------------------------------------------------
   hz63dse:
     name: '&#5BD8FF&lĐóng Băng'
+    type: FROST_BOLT
     # Tầm bắn tối đa (block) theo hướng nhìn
     range: 15
-    # Thời gian giữ chân mục tiêu (giây)
+    # Thời gian đóng băng người chơi / mục tiêu (giây). Băng ở chân tan sau thời gian này.
     freeze-seconds: 3
     # Bán kính đóng băng quanh điểm đạn băng nổ (block)
     freeze-radius: 2.0
@@ -73,8 +93,39 @@ skills:
     cooldown-seconds: 30
     # CustomModelData khi bật override-custom-model-data (-1 = không đổi)
     custom-model-data: -1
-    # Thông báo riêng của skill
-    # {skill}: tên skill | {time}: số giây (hồi chiêu hoặc thời gian đóng băng)
+    # Vùng băng quanh người dùng
+    ice-field:
+      # Bán kính vùng băng (block)
+      radius: 3
+      # Thời gian băng tồn tại trước khi bắt đầu tan (giây)
+      duration-seconds: 10
+      # Số tick giữa mỗi vòng tan (5 tick = 0.25 giây)
+      melt-ring-ticks: 5
+    # Thông báo ({skill}: tên skill | {time}: số giây)
     use-message: '&bĐã kích hoạt &3{skill}&b!'
     cooldown-message: '&c{skill} đang hồi chiêu, còn &e{time}s&c.'
     frozen-message: '&bBạn bị &3{skill}&b, đứng yên trong &f{time}s&b!'
+
+  # ---------------------------------------------------------------
+  # ghsoa3d - Tàng Hình (type: STEALTH)
+  # Khi dùng: tàng hình + tăng tốc trong 15 giây, vũ khí được cộng sát thương.
+  # Mất tàng hình khi tấn công hoặc bị đánh.
+  # ---------------------------------------------------------------
+  ghsoa3d:
+    name: '&#B3E5FC&lTàng Hình'
+    type: STEALTH
+    # Thời gian hồi chiêu (giây)
+    cooldown-seconds: 60
+    custom-model-data: -1
+    use-message: '&bKích hoạt &3{skill}&b.'
+    cooldown-message: '&c{skill} đang hồi chiêu, còn &e{time}s&c.'
+    stealth:
+      # Thời gian tàng hình (giây)
+      duration-seconds: 15
+      # Mức tăng tốc (0 = Speed I, 1 = Speed II)
+      speed-level: 1
+      # Sát thương cộng thêm cho đòn đánh bằng vũ khí trong lúc tàng hình
+      bonus-damage: 2.0
+      # {reason}: lý do kết thúc (hết thời gian / đã tấn công / bị tấn công)
+      enter-message: '&bBạn đã vào chế độ &fTàng Hình&b! &7Vũ khí được cộng thêm sát thương.'
+      exit-message: '&7Mất tàng hình: &e{reason}&7.'
