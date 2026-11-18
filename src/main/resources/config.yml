@@ -1,0 +1,80 @@
+# ===================================================================
+#  OTMitems - config.yml
+#  Mã màu: &0-&9, &a-&f, &l (đậm), &o (nghiêng), &r (reset)
+#  Mã hex: &#RRGGBB (ví dụ &#5BD8FF)
+# ===================================================================
+
+settings:
+  # false: giữ nguyên CustomModelData vốn có của vũ khí (khuyến nghị)
+  # true : đổi CustomModelData sang giá trị 'custom-model-data' của skill
+  #        (chỉ khi skill khai báo >= 0). Giá trị gốc luôn được lưu lại và
+  #        sẽ được khôi phục khi xóa skill.
+  override-custom-model-data: false
+
+  # true: cho phép gắn skill lên mọi vật phẩm (không chỉ vũ khí)
+  allow-any-item: false
+
+  # Ngoài kiếm (*_SWORD) và rìu (*_AXE), các vật liệu sau được coi là vũ khí
+  extra-weapon-materials:
+    - TRIDENT
+    - BOW
+    - CROSSBOW
+    - MACE
+
+  # Thanh hồi chiêu hiển thị trên Action Bar khi đang cầm đúng vũ khí đó
+  cooldown-bar:
+    enabled: true
+    # Chu kỳ cập nhật (tick, 20 tick = 1 giây)
+    update-ticks: 5
+    # Độ dài thanh (số ký tự)
+    length: 20
+    filled-char: '█'
+    empty-char: '░'
+    filled-color: '&b'
+    empty-color: '&7'
+    # {skill}: tên skill | {bar}: thanh tiến trình | {time}: số giây còn lại
+    format: '&f{skill} &8[{bar}&8] &e{time}s'
+
+messages:
+  prefix: '&#00E5FF[OTMitems] &r'
+  no-permission: '&cBạn không có quyền dùng lệnh này.'
+  player-only: '&cLệnh này chỉ dùng trong game.'
+  usage: '&7Cách dùng: &e/ot <mã> &7| &e/ot set <mã> &7| &e/ot del [mã] &7| &e/ot reload'
+  not-holding-item: '&cBạn cần cầm vũ khí trên tay chính.'
+  invalid-item: '&cVật phẩm trên tay không phải vũ khí hợp lệ.'
+  stack-not-allowed: '&cChỉ gắn skill cho vật phẩm đơn (số lượng = 1).'
+  unknown-skill: '&cMã skill &e{code} &ckhông tồn tại trong config.yml.'
+  skill-applied: '&aĐã gắn skill &e{skill} &avào vũ khí.'
+  skill-replaced: '&aĐã thay skill cũ bằng &e{skill}&a.'
+  skill-already: '&eVũ khí này đã có skill &b{skill}&e.'
+  skill-removed: '&aĐã xóa skill &e{skill} &akhỏi vũ khí.'
+  no-skill-on-item: '&cVũ khí trên tay không có skill nào.'
+  skill-mismatch: '&cVũ khí không có skill &e{code}&c (đang có: &e{skill}&c).'
+  skill-unknown-on-item: '&cSkill &e{code} &ckhông còn tồn tại trong config.yml.'
+  reloaded: '&aĐã reload config.yml. Đã nạp &e{count} &askill.'
+
+skills:
+  # Mã skill (chữ thường). Dùng: /ot hz63dse
+  hz63dse:
+    name: '&#5BD8FF&lĐóng Băng'
+    # Tầm bắn tối đa (block) theo hướng nhìn
+    range: 15
+    # Thời gian giữ chân mục tiêu (giây)
+    freeze-seconds: 3
+    # Bán kính đóng băng quanh điểm đạn băng nổ (block)
+    freeze-radius: 2.0
+    # Sát thương cộng thêm khi trúng (0 = chỉ đóng băng)
+    damage: 0
+    # Mức Slowness dùng để giữ chân (10 = đứng yên hoàn toàn)
+    slowness-level: 10
+    # Hạt bay theo đường đạn (ví dụ: SNOWFLAKE, END_ROD, CLOUD, ...)
+    projectile-particle: SNOWFLAKE
+    # Thời gian hồi chiêu (giây), tính riêng cho từng vũ khí
+    cooldown-seconds: 30
+    # CustomModelData khi bật override-custom-model-data (-1 = không đổi)
+    custom-model-data: -1
+    # Thông báo riêng của skill
+    # {skill}: tên skill | {time}: số giây (hồi chiêu hoặc thời gian đóng băng)
+    use-message: '&bĐã kích hoạt &3{skill}&b!'
+    cooldown-message: '&c{skill} đang hồi chiêu, còn &e{time}s&c.'
+    frozen-message: '&bBạn bị &3{skill}&b, đứng yên trong &f{time}s&b!'

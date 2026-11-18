@@ -1,0 +1,18 @@
+name: OTMitems
+version: '${project.version}'
+main: com.knmusic.otmitems.OTMitems
+api-version: '1.21'
+author: KNMUSIC-apk
+description: Gắn và quản lý skill trên vũ khí thông qua PersistentDataContainer và CustomModelData
+
+commands:
+  ot:
+    description: Quản lý skill trên vũ khí đang cầm
+    usage: '/ot <mã> | /ot set <mã> | /ot del [mã] | /ot reload'
+    aliases: [otmitems]
+    permission: ot.admin
+
+permissions:
+  ot.admin:
+    description: Cho phép dùng lệnh /ot
+    default: op
